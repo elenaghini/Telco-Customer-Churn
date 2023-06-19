@@ -1,0 +1,490 @@
+```{r}
+install.packages("readr")
+install.packages("dplyr")
+
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyverse)
+# Memuat library yang diperlukan untuk SVM
+library(e1071)
+library(caret)
+```
+
+
+```{r}
+data <- read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+```
+```{r}
+
+Check <- function(O) {
+  data <- sum(is.na(O))
+  return(data)
+}
+
+sapply(df, FUN = Check)
+
+```
+
+```{r}
+#Memahami Struktur Data
+#Periksa struktur data, tipe variabel, dan tampilan awal beberapa baris data 
+str(data)
+```
+
+```{r}
+#jumlah kolom dan data
+dim(data)
+
+```
+
+```{r}
+#Statistik Deskriptif Variabel Numerik
+
+summary(data$tenure)
+summary(data$MonthlyCharges)
+summary(data$TotalCharges)
+
+```
+
+
+```{r}
+head(data)
+```
+
+```{r}
+#distribusi kategorikal variabel
+table(data$gender)
+table(data$SeniorCitizen)
+table(data$Partner)
+table(data$Dependents)
+table(data$PhoneService)
+table(data$MultipleLines)
+table(data$InternetService)
+table(data$OnlineSecurity)
+table(data$OnlineBackup)
+table(data$DeviceProtection)
+table(data$TechSupport)
+table(data$StreamingTV)
+table(data$StreamingMovies)
+table(data$Contract)
+table(data$PaperlessBilling)
+table(data$PaymentMethod)
+table(data$Churn)
+
+```
+```{r}
+table(data)
+```
+
+```{r}
+#kolerasi antara variabel Numerik
+cor(data$tenure, data$MonthlyCharges)
+cor(data$tenure, data$TotalCharges)
+cor(data$MonthlyCharges, data$TotalCharges)
+
+```
+```{r}
+# Memuat library yang diperlukan
+library(e1071)
+library(caret)
+```
+
+```{r}
+str(data)
+
+```
+
+```{r}
+# Cek dan tangani nilai yang hilang
+#sum(is.na(data))
+#outputnya 0 berarti data ini sudah bersih
+
+#jika ada data yang kurag bagus lakukan sbb
+# Menghapus baris dengan nilai yang hilang
+#data <- na.omit(data)
+
+# Menghapus duplikasi data
+#data <- distinct(data)
+missing_values <- sum(is.na(data))
+print(missing_values)
+
+clean_data <- na.omit(data)
+
+
+#Periksa missing values dan tangani 
+#missing_valuesss <- colSums(is.na(data)) (bisajuga pake ini)
+
+#tidak ada missing value
+
+
+```
+```{r}
+#kolerasi antara variabel Numerik
+cor(clean_data$tenure, clean_data$MonthlyCharges)
+cor(clean_data$tenure, clean_data$TotalCharges)
+cor(clean_data$MonthlyCharges, clean_data$TotalCharges)
+```
+
+```{r}
+#Hitung statistik deskriptif untuk variabel numerik
+
+numeric_vars <- c("SeniorCitizen", "tenure", "MonthlyCharges", "TotalCharges")
+summary_stats <- summary(data[, numeric_vars])
+print(summary_stats)
+
+
+```
+```{r}
+summary(missing_valuesss)
+```
+
+
+```{r}
+#histogram atau grafik frekuensi untuk melihat distribusi variabel numerik
+
+hist(data$tenure, main = "Distribusi Tenure", xlab = "Tenure")
+hist(data$MonthlyCharges, main = "Distribusi Monthly Charges", xlab = "Monthly Charges")
+hist(data$TotalCharges, main = "Distribusi Total Charges", xlab = "Total Charges")
+
+```
+
+```{r}
+#Identifikasi outlier menggunakan diagram kotak (box plot):
+boxplot(data$tenure, main = "Box Plot Tenure")
+boxplot(data$MonthlyCharges, main = "Box Plot Monthly Charges")
+boxplot(data$TotalCharges, main = "Box Plot Total Charges")
+
+```
+
+
+```{r}
+#mendapatkan statistik deskriptif dari variabel numerik
+summary(data$tenure)
+mean(data$MonthlyCharges)
+
+```
+
+```{r}
+#Visualisasi Data
+library(ggplot2)
+
+# Contoh visualisasi
+ggplot(data, aes(x = Churn, fill = Churn)) +
+  geom_bar()
+
+```
+
+
+```{r}
+# Contoh uji beda antara MonthlyCharges untuk Churn = Yes dan Churn = No
+t.test(data$MonthlyCharges ~ data$Churn)
+
+```
+
+```{r}
+# Memuat library untuk analisis regresi linier
+library(lmtest)
+
+# Membuat model regresi linier
+model <- lm(TotalCharges ~ MonthlyCharges, data = data)
+
+# Melihat hasil ringkasan model
+summary(model)
+
+```
+
+```{r}
+clean_data <- read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+```
+
+
+```{r}
+# Mengubah nilai "No" menjadi 0 dan "Yes" menjadi 1 pada kolom Churn
+clean_data$Churn <- ifelse(clean_data$Churn == "No", 0, 1)
+
+# Membuat model regresi logistik
+logit_model <- glm(Churn ~ tenure + MonthlyCharges + SeniorCitizen, data = clean_data, family = "binomial")
+
+# Menghitung prediksi model
+predictions <- predict(logit_model, newdata = clean_data, type = "response")
+
+# Mengkonversi nilai prediksi menjadi kategori biner (1 atau 0) dengan menggunakan threshold 0.5
+predicted_labels <- ifelse(predictions >= 0.5, 1, 0)
+
+# Membuat matriks kebingungan
+confusion_matrix <- table(clean_data$Churn, predicted_labels)
+
+# Menampilkan matriks kebingungan
+print(confusion_matrix)
+
+
+```
+
+```{r}
+# Memuat library yang diperlukan
+library(cluster)
+
+# Menghapus variabel yang tidak relevan untuk analisis klaster
+data_cluster <- clean_data[, c("tenure", "MonthlyCharges", "TotalCharges")]
+
+# Menghapus baris dengan missing values
+data_cluster <- na.omit(data_cluster)
+
+# Menstandarisasi variabel
+data_scaled <- scale(data_cluster)
+
+# Menentukan jumlah klaster yang diinginkan
+k <- 3
+
+# Melakukan analisis klaster menggunakan metode k-means
+kmeans_result <- kmeans(data_scaled, centers = k, nstart = 25)
+
+# Melihat hasil klaster
+print(kmeans_result)
+
+```
+```{r}
+# Memuat library yang diperlukan
+library(cluster)
+library(ggplot2)
+
+# Menghapus variabel yang tidak relevan untuk analisis klaster
+data_cluster <- data[, c("tenure", "MonthlyCharges", "TotalCharges")]
+
+# Menghapus baris dengan missing values
+data_cluster <- na.omit(data_cluster)
+
+# Menstandarisasi variabel
+scaled_data <- scale(data_cluster)
+
+# Menentukan jumlah klaster yang diinginkan
+k <- 3
+
+# Melakukan analisis klaster menggunakan metode k-means
+kmeans_result <- kmeans(scaled_data, centers = k, nstart = 25)
+
+# Menambahkan informasi klaster ke dataset
+data_cluster$Cluster <- as.factor(kmeans_result$cluster)
+
+# Visualisasi hasil klaster
+ggplot(data_cluster, aes(x = tenure, y = MonthlyCharges, color = Cluster)) +
+  geom_point() +
+  labs(title = "Analisis Klaster menggunakan K-Means",
+       x = "Tenure",
+       y = "Monthly Charges") +
+  theme_minimal()
+
+```
+
+```{r}
+# Menghapus baris dengan setidaknya satu nilai yang hilang
+clean_cluster_vars <- na.omit(data$cluster_vars)  # Ganti 'your_data' dengan objek yang sesuai dan 'cluster_vars' dengan variabel yang ingin Anda gunakan
+
+# Melakukan analisis klaster menggunakan metode k-means
+kmeans_model <- kmeans(clean_cluster_vars, centers = num_clusters)
+
+# Melihat hasil klaster
+kmeans_model$cluster
+
+
+
+```
+
+
+
+```{r}
+# Memisahkan data pelanggan yang churn dan tidak churn
+churn_data <- data[data$Churn == "Yes", ]
+no_churn_data <- data[data$Churn == "No", ]
+
+# Melakukan uji t untuk membandingkan rata-rata MonthlyCharges antara kelompok churn dan tidak churn
+t_test_result <- t.test(churn_data$MonthlyCharges, no_churn_data$MonthlyCharges)
+
+# Melihat hasil uji t
+t_test_result
+
+```
+
+
+```{r}
+# Membuat tabel kontingensi antara variabel Churn dan Contract
+churn_contract_table <- table(data$Churn, data$Contract)
+
+# Melakukan uji chi-square
+chi_square_result <- chisq.test(churn_contract_table)
+
+# Melihat hasil uji chi-square
+chi_square_result
+
+```
+
+```{r}
+# Contoh konversi jika kolom "Month" dalam format karakter
+data$Month <- as.Date(data$Month, format = "%Y-%m-%d")
+
+# Setelah mengubah ke tipe data tanggal, Anda dapat membuat grafik deret waktu
+plot(data$Month, data$MonthlyCharges, type = "l", xlab = "Time", ylab = "Monthly Charges")
+
+
+```
+
+
+```{r}
+#install.packages("caTools")
+library(tidyverse)  # Memuat paket tidyverse
+library(caTools)  # Memuat paket caTools
+```
+```{r}
+clean_data <- data[, c("gender", "SeniorCitizen", "Partner", "Dependents", "tenure", "PhoneService", "MultipleLines",
+                 "InternetService", "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport",
+                 "StreamingTV", "StreamingMovies", "Contract", "PaperlessBilling", "PaymentMethod",
+                 "MonthlyCharges", "TotalCharges", "Churn")]
+
+data$gender <- as.factor(clean_data$gender)
+data$Partner <- as.factor(clean_data$Partner)
+data$Dependents <- as.factor(clean_data$Dependents)
+data$PhoneService <- as.factor(clean_data$PhoneService)
+data$MultipleLines <- as.factor(clean_data$MultipleLines)
+data$InternetService <- as.factor(clean_data$InternetService)
+data$OnlineSecurity <- as.factor(clean_data$OnlineSecurity)
+data$OnlineBackup <- as.factor(clean_data$OnlineBackup)
+data$DeviceProtection <- as.factor(clean_data$DeviceProtection)
+data$TechSupport <- as.factor(clean_data$TechSupport)
+data$StreamingTV <- as.factor(clean_data$StreamingTV)
+data$StreamingMovies <- as.factor(clean_data$StreamingMovies)
+data$Contract <- as.factor(clean_data$Contract)
+data$PaperlessBilling <- as.factor(clean_data$PaperlessBilling)
+data$PaymentMethod <- as.factor(clean_data$PaymentMethod)
+data$Churn <- as.factor(clean_data$Churn)
+
+
+```
+
+
+```{r}
+set.seed(123)  # Set seed untuk reproduktibilitas
+split <- sample.split(data$Churn, SplitRatio = 0.7)  # Membagi data menjadi train (70%) dan test (30%)
+train_data <- data[split, ]  # Data latih
+test_data <- data[!split, ]  # Data uji
+
+```
+
+
+```{r}
+predictions <- predict(logit_model, newdata = test_data, type = "response")
+
+summary(predictions)
+```
+```{r}
+# Mengubah prediksi menjadi kategori churn atau tidak churn (Yes/No)
+predicted_churn <- ifelse(predictions > 0.5, "Yes", "No")
+
+# Menghitung akurasi model
+accuracy <- sum(predicted_churn == test_data$Churn) / nrow(test_data)
+
+summary(accuracy)
+```
+MODEL SVM
+```{r}
+
+# Memuat library yang diperlukan
+library(e1071)
+ 
+# Membaca file CSV
+df <- read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+ # Menghapus kolom customerID yang tidak relevan
+df <- df[, -1]
+ 
+# Mengisi nilai yang hilang dengan median
+df$TotalCharges[is.na(df$TotalCharges)] <- median(df$TotalCharges, na.rm = TRUE)
+ 
+# Mengubah tipe data kolom TotalCharges menjadi numerik
+df$TotalCharges <- as.numeric(df$TotalCharges)
+# Mengubah variabel dependen menjadi faktor
+df$Churn <- as.factor(df$Churn)
+ 
+# Pemisahan dataset menjadi fitur dan label
+X <- df[, -20]
+y <- df[, 20]
+ 
+# Encoding one-hot pada fitur-fitur kategorikal
+X <- model.matrix(~.-1, data = X)
+ 
+# Pembagian dataset menjadi training set dan test set
+set.seed(42)  # Untuk reproduktibilitas
+train_idx <- sample(1:nrow(X), 0.8 * nrow(X))
+X_train <- X[train_idx, ]
+y_train <- y[train_idx]
+X_test <- X[-train_idx, ]
+y_test <- y[-train_idx]
+ 
+# Melatih model SVM untuk klasifikasi
+model <- svm(x = X_train, y = y_train)
+ 
+# Melakukan prediksi pada data test set
+y_pred <- predict(model, X_test)
+ 
+# Menghitung akurasi prediksi
+accuracy <- sum(y_pred == y_test) / length(y_test)
+print(paste("Akurasi:", accuracy))
+
+```
+```{r}
+# Membaca file CSV
+df <- read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+# Menghapus kolom customerID yang tidak relevan
+df <- df[, -1]
+
+# Mengisi nilai yang hilang dengan median
+df$TotalCharges[is.na(df$TotalCharges)] <- median(df$TotalCharges, na.rm = TRUE)
+
+# Mengubah tipe data kolom TotalCharges menjadi numerik
+df$TotalCharges <- as.numeric(df$TotalCharges)
+
+# Mengubah variabel dependen menjadi faktor
+df$Churn <- as.factor(df$Churn)
+
+# Pemisahan dataset menjadi fitur dan label
+X <- df[, -20]
+y <- df[, 20]
+
+# Encoding one-hot pada fitur-fitur kategorikal
+X <- model.matrix(~.-1, data = X)
+
+# Pembagian dataset menjadi training set dan test set
+set.seed(42)  # Untuk reproduktibilitas
+train_idx <- sample(1:nrow(X), 0.8 * nrow(X))
+X_train <- X[train_idx, ]
+y_train <- y[train_idx]
+X_test <- X[-train_idx, ]
+y_test <- y[-train_idx]
+
+# Melatih model SVM untuk klasifikasi
+svm_model <- svm(x = X_train, y = y_train)
+
+# Melakukan prediksi pada data test set
+y_pred <- predict(svm_model, newdata = X_test)
+
+# Menghitung akurasi prediksi
+accuracy <- sum(y_pred == y_test) / length(y_test)
+print(paste("Akurasi:", accuracy))
+
+# Menghitung confusion matrix
+confusion <- confusionMatrix(data = y_pred, reference = y_test)
+
+# Mengambil metrik evaluasi
+precision <- confusion$byClass['Precision']
+recall <- confusion$byClass['Recall']
+f1_score <- confusion$byClass['F1']
+
+# Menampilkan hasil
+cat("Precision:", precision, "\n")
+cat("Recall:", recall, "\n")
+cat("F1-score:", f1_score, "\n")
+
+```
